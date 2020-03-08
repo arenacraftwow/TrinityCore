@@ -12,11 +12,10 @@ import { copyTextToClipboard } from 'util/copyTextToClipboard';
 
 const REALMLIST = 'set realmlist 138.201.117.25'
 
-
 function CoppiedToClipboardContent() {
     return (
         <React.Fragment>
-            <p style={{ fontSize: '0.9rem', marginBottom: 6 }}>in your clipboard  📋 </p>
+            <p style={{ fontSize: '0.9rem', marginBottom: 6 }}>in your clipboard  <span role='img' aria-label='clipboard icon'>📋</span> </p>
             <code style={{ fontSize: '1.1rem' }}>set realmlist 138.201.117.25</code>
         </React.Fragment>
     )
@@ -73,12 +72,12 @@ export function HomePage() {
                 >
                     <code className="HomePage-right-realmlist">{REALMLIST}</code>
                 </Alert>
-                <div className="HomePage-Stats">
-                    <StatEntry _key='Status' value='Online' />
-                    <StatEntry _key='Players online' value='41289' />
-                    <StatEntry _key='Peak players online' value='34891' />
-                    <StatEntry _key='Accounts made' value='2189' />
-                </div>
+                {serverMetadata !== null && <div className="HomePage-Stats">
+                    <StatEntry _key='Status' value={serverMetadata?.isUp ? 'UP↑' : 'DOWN↓'} />
+                    <StatEntry _key='Players online' value={serverMetadata?.online || -1} />
+                    <StatEntry _key='Peak players online' value={serverMetadata?.peakOnline || -1} />
+                    <StatEntry _key='Accounts made' value={serverMetadata?.accountCount || -1} />
+                </div>}
                 <iframe
                     title={'DiscordWidget'}
                     src={"https://discordapp.com/widget?id=686257951887196170&theme=dark"}

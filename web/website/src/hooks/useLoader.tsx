@@ -9,7 +9,7 @@ export function useLoader<T>(
     useEffect(() => {
         loader().then(resp => {
             if (isMounted.current) {
-                setItem(item);
+                setItem(resp);
             }
         }).catch(err => {
             console.error('useLoader failed', err);

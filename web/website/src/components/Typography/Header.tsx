@@ -11,7 +11,7 @@ export const Header: React.SFC<Props> = (props) => {
         <>
             <h3 className="Header">
                 <span className="Header-content">{props.children}</span>
-                {props.subHeaderText && <span className="Header-subheader">{props.subHeaderText}</span>}
+                {hasSubHeader && <span className="Header-subheader">{props.subHeaderText}</span>}
                <div className="Header-underline"></div>
             </h3>
         </>

@@ -13,8 +13,8 @@ interface AlertProps {
 export const Alert: React.SFC<AlertProps> = (props) => {
     const type = props.type || 'info';
     const hideAlertType = props.hideAlertType || false;
-    const isInfo = props.type == 'info';
-    const isWarn = props.type == 'warning';
+    const isInfo = props.type === 'info';
+    const isWarn = props.type === 'warning';
 
     return (
         <div className={classNames(
