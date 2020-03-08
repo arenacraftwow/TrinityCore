@@ -5,6 +5,8 @@ import { HomePage } from 'pages/HomePage/HomePage';
 import { RootNavigation } from './RootNavigation';
 import { Route, Switch, Redirect, useLocation } from 'react-router-dom';
 import { Alert } from 'components/Alert/Alert';
+import { ToastContainer, Flip } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 interface _NavigationState {
     fromNotFoundPage: boolean;
@@ -31,7 +33,7 @@ export function Root() {
                     type='warning'
                     onCloseRequest={() => setShowPageNotFoundAlert(false)}
                     >
-                        The page you were trying to visit does not exist
+                        The page you were trying to visit does not exist. Redirected to Home.
                     </Alert>}
                 <Switch>
                     <Route path='/home'>
@@ -45,6 +47,7 @@ export function Root() {
                     </Route>
                 </Switch>
             </main>
+            <ToastContainer  transition={Flip} position='bottom-right' />
         </div>
     )
 }

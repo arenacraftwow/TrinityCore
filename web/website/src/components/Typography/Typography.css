@@ -12,6 +12,13 @@
     color: white;
 }
 
+.Header>.Header-subheader {
+    margin-top: 7px;
+    display: block;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
 .Header>.Header-underline {
     margin-top: 17px;
     width: calc(100%);
@@ -21,7 +28,7 @@
 
 .Text {
     padding: 0 0 0 7px;
-    font-family: 'sans serif';
+    font-family: 'Noto Sans' 'sans serif';
     line-height: 1.5;
     color: rgba(255, 255, 255, 0.87);
 }

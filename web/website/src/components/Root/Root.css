@@ -23,7 +23,8 @@ a.selected {
 }
 
 .Root-navigation ul {
-    padding: 12px;
+    background-color: #1f2329;
+    padding: 12px 0 17px 0;
     display: flex;
     flex-flow: row wrap;
     justify-content: center;
@@ -39,7 +40,10 @@ a.selected {
 }
 
 .Root-navigation li .seperator {
+    font-size: 1.5rem;
     font-weight: bold;
+    display: inline-block;
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .Root-children-container {
@@ -47,4 +51,8 @@ a.selected {
     padding: 10px;
     margin: 19px auto;
     max-width: 960px;
+}
+
+.Toastify__toast.Toastify__toast--info {
+    background-color: #1f2329;
 }

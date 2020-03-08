@@ -19,7 +19,18 @@ const NavLink: React.SFC<NavLinkProps> = ({ url, children }) => {
 export function RootNavigation() {
     return (
         <nav className="Root-navigation">
-            <h1>ArenaCraft Project</h1>
+            <h1>
+                <span
+                    style={{
+                        textDecoration:'underline',
+                        display:'inline-block',
+                        width: 50,
+                        height: 60,
+                        border: '2px solid'
+                    }}
+                >A</span>
+                renaCraft<span style={{color: 'rgba(255, 255, 255, 0.7)', display:'inline-block'}}>Project</span>
+            </h1>
             <ul>
                 <li>
                     <NavLink url='/home'>Home</NavLink>
@@ -40,7 +51,7 @@ export function RootNavigation() {
                     <span className="seperator">/</span>
                 </li>
                 <li>
-                    <a rel="noopener noreferrer" href="https://discordapp.com" target="_blank">Discord🡕</a>
+                    <a rel="noopener noreferrer" href="https://discord.gg/dTSkUgU" target="_blank">Discord🡕</a>
                 </li>
                 <li>
                     <span className="seperator">/</span>

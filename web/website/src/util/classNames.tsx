@@ -8,7 +8,7 @@ export function classNames(
         if (element === false) {
             continue;
         } else {
-            output += element;
+            output += ` ${element}`;
         }
     }
 

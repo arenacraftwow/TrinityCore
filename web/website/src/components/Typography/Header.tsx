@@ -1,12 +1,18 @@
 import React from 'react';
 import './Typography.css';
 
-export const Header: React.SFC = (props) => {
+interface Props {
+    subHeaderText?: React.ReactChild;
+}
+
+export const Header: React.SFC<Props> = (props) => {
+    const hasSubHeader = Boolean(props.subHeaderText);
     return (
         <>
             <h3 className="Header">
                 <span className="Header-content">{props.children}</span>
-                <div className="Header-underline"></div>
+                {props.subHeaderText && <span className="Header-subheader">{props.subHeaderText}</span>}
+               <div className="Header-underline"></div>
             </h3>
         </>
     )
