@@ -1,0 +1,9 @@
+.Root {
+    min-height: 100vh;
+    text-align: center;
+    background-color: #282c34;
+}
+
+a {
+    color: #61dafb;
+}
