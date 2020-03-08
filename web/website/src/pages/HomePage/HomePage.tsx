@@ -4,7 +4,7 @@ import './HomePage.css';
 export function HomePage() {
     return (
         <>
-            Nothing here, yet 🙄
+            Nothing here, ...yet 🙄
         </>
     )
 }

@@ -10,8 +10,8 @@ export function AboutPage() {
             <Section>
                 <Header>What is ArenaCraft?</Header>
                 <Text>
-                    <i>ArenaCraft</i> is a arena focused WoW server. The project is based on the 3.3.5a branch of <a href="https://github.com/trinitycore/trinitycore">TrinityCore🡕</a> 
-                    &nbsp; with all of our modifications (including this site) being <a href="http://github.com/arenacraftwow/trinitycore">open source</a>. 
+                    <i>ArenaCraft</i> is a arena focused WoW server. The project is based on the 3.3.5a branch of <a rel="noopener noreferrer" href="https://github.com/trinitycore/trinitycore" target="_blank">TrinityCore🡕</a> 
+                    &nbsp; with all of our modifications (including this site) being <a rel="noopener noreferrer" href="http://github.com/arenacraftwow/trinitycore" target="_blank">open source🡕</a>. 
                     Our goal is to create a place to skirmish your frirends at and experiment with C++.
                 </Text>
             </Section>
