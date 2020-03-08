@@ -31,7 +31,7 @@ export function Root() {
                     type='warning'
                     onCloseRequest={() => setShowPageNotFoundAlert(false)}
                     >
-                        The site you were trying to visit does not exist
+                        The page you were trying to visit does not exist
                     </Alert>}
                 <Switch>
                     <Route path='/home'>
