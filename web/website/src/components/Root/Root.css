@@ -1,9 +1,46 @@
 .Root {
     min-height: 100vh;
-    text-align: center;
     background-color: #282c34;
+    color: rgba(255, 255, 255, 0.95);
 }
 
 a {
     color: #61dafb;
+}
+
+a.selected {
+    font-weight: bold;
+    color: #61c8fb;
+}
+
+.Root-navigation h1 {
+    text-align: center;
+    color: white;
+    font-size: 3rem;
+    padding: 19px 0;
+}
+
+.Root-navigation ul {
+    padding: 12px;
+    display: flex;
+    justify-content: center;
+}
+
+.Root-navigation li {
+    margin-left: 12px;
+}
+
+.Root-navigation li a {
+    font-size: 1.5rem;
+}
+
+.Root-navigation li .seperator {
+    font-weight: bold;
+}
+
+.Root-children-container {
+    font-size: 1.2rem;
+    padding: 10px;
+    margin: 19px auto;
+    max-width: 960px;
 }
