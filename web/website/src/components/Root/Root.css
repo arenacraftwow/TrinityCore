@@ -48,7 +48,7 @@ a.selected {
 
 .Root-children-container {
     font-size: 1.2rem;
-    padding: 10px;
+    padding: 10px 10px 40px 10px;
     margin: 19px auto;
     max-width: 960px;
 }

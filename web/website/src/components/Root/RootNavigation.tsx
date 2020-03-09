@@ -57,7 +57,7 @@ export function RootNavigation() {
                     <span className="seperator">/</span>
                 </li>
                 <li>
-                    <a rel="noopener noreferrer" href="http://github.com/arenacraftwow/trinitycore" target="_blank">Source Code🡕</a>
+                    <a rel="noopener noreferrer" href="http://github.com/arenacraftwow/trinitycore" target="_blank">Source Code↗</a>
                 </li>
             </ul>
         </nav>
