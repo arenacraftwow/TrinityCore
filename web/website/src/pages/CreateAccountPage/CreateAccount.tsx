@@ -154,7 +154,7 @@ export function CreateAccountPage() {
                     />
                 </Labeled>
                 <div style={{ display: 'flex', flexFlow: 'row nowrap', justifyContent: 'flex-end', marginTop: 21 }}>
-                    <Button buttonProps={{ disabled: isSubmitting }} >SING UP</Button>
+                    <Button buttonProps={{ disabled: isSubmitting }} >SIGN UP</Button>
                 </div>
             </form>
         </div>

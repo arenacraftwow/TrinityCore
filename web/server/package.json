@@ -1,0 +1,20 @@
+{
+    "name": "arenacraft-api",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node server.js"
+    },
+    "author": "ArenaCraft",
+    "license": "MIT",
+    "dependencies": {
+        "axios": "^0.19.2",
+        "koa": "^2.11.0",
+        "koa-bodyparser": "^4.2.1",
+        "koa-router": "^8.0.8",
+        "mysql2": "^2.1.0",
+        "validate": "^5.1.0"
+    }
+}
