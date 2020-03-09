@@ -43,7 +43,7 @@ a.selected {
     font-size: 1.5rem;
     font-weight: bold;
     display: inline-block;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.75);
 }
 
 .Root-children-container {

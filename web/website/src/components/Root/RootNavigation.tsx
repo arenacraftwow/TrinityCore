@@ -32,7 +32,7 @@ export function RootNavigation() {
                 renaCraft<span style={{color: 'rgba(255, 255, 255, 0.7)', display:'inline-block'}}>Project</span>
             </h1>
             <ul>
-                <li>
+                {/* <li>
                     <NavLink url='/home'>Home</NavLink>
                 </li>
                 <li>
@@ -43,16 +43,16 @@ export function RootNavigation() {
                 </li>
                 <li>
                     <span className="seperator">/</span>
-                </li>
+                </li> */}
                 <li>
-                    <NavLink url='/new-account'>Create Account</NavLink>
+                    <NavLink url='/create-account'>Create Account</NavLink>
                 </li>
-                <li>
+                {/* <li>
                     <span className="seperator">/</span>
                 </li>
                 <li>
                     <a rel="noopener noreferrer" href="https://discord.gg/dTSkUgU" target="_blank">Discord🡕</a>
-                </li>
+                </li> */}
                 <li>
                     <span className="seperator">/</span>
                 </li>

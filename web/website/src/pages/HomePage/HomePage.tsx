@@ -6,20 +6,10 @@ import { Section } from 'components/Typography/Section';
 import { Header } from 'components/Typography/Header';
 import { Text } from 'components/Typography/Text';
 import { Alert } from 'components/Alert/Alert';
-import { toast } from 'react-toastify';
-import { copyTextToClipboard } from 'util/copyTextToClipboard';
+import { copyToClipboardWithToast } from 'components/Clipboard/CoppiedToClipboardToastContent';
 
 
-const REALMLIST = 'set realmlist 138.201.117.25'
-
-function CoppiedToClipboardContent() {
-    return (
-        <React.Fragment>
-            <p style={{ fontSize: '0.9rem', marginBottom: 6 }}>in your clipboard  <span role='img' aria-label='clipboard icon'>📋</span> </p>
-            <code style={{ fontSize: '1.1rem' }}>set realmlist 138.201.117.25</code>
-        </React.Fragment>
-    )
-}
+const REALMLIST = 'set realmlist 138.201.117.25';
 
 interface StatEntryProps {
     _key: string;
@@ -46,8 +36,7 @@ export function HomePage() {
     );
 
     function putRealmlistToClipboard() {
-        copyTextToClipboard(REALMLIST);
-        toast(CoppiedToClipboardContent, { type: 'info' });
+        copyToClipboardWithToast(REALMLIST);
     }
 
     return (
