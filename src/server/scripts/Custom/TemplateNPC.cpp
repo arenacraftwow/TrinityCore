@@ -396,7 +396,6 @@ public:
             }
 
             AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\Spell_ChargeNegative:30|t|r Reset Talents", GOSSIP_SENDER_MAIN, 31);
-            AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\Spell_ChargeNegative:30|t|r Destroy my equipped gear", GOSSIP_SENDER_MAIN, 32);
 
             SendGossipMenuFor(player, 55002, me->GetGUID());
 
@@ -651,30 +650,6 @@ public:
                 player->ResetTalents(true);
                 player->SendTalentsInfoData(false);
                 player->GetSession()->SendAreaTriggerMessage("Your talents have been reset.");
-                CloseGossipMenuFor(player);
-                break;
-            case 32:
-                for (uint8 i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; ++i)
-                {
-                    if (Item* haveItemEquipped = player->GetItemByPos(INVENTORY_SLOT_BAG_0, i))
-                    {
-                        if (haveItemEquipped)
-                        {
-                            player->DestroyItemCount(haveItemEquipped->GetEntry(), 1, true, true);
-
-                            if (haveItemEquipped->IsInWorld())
-                            {
-                                haveItemEquipped->RemoveFromWorld();
-                                haveItemEquipped->DestroyForPlayer(player);
-                            }
-
-                            haveItemEquipped->SetGuidValue(ITEM_FIELD_CONTAINED, ObjectGuid::Empty);
-                            haveItemEquipped->SetSlot(NULL_SLOT);
-                            haveItemEquipped->SetState(ITEM_REMOVED, player);
-                        }
-                    }
-                }
-                player->GetSession()->SendAreaTriggerMessage("Your equipped gear has been destroyed.");
                 CloseGossipMenuFor(player);
                 break;
             default: // Just in case
