@@ -45,63 +45,6 @@ void sTemplateNPC::ApplyBonus(Player* player, Item* item, EnchantmentSlot slot, 
     player->ApplyEnchantment(item, slot, true);
 }
 
-void sTemplateNPC::ApplyGlyph(Player* player, uint8 slot, uint32 glyphID)
-{
-    if (GlyphPropertiesEntry const* gp = sGlyphPropertiesStore.LookupEntry(glyphID))
-    {
-        if (uint32 oldGlyph = player->GetGlyph(slot))
-        {
-            player->RemoveAurasDueToSpell(sGlyphPropertiesStore.LookupEntry(oldGlyph)->SpellId);
-            player->SetGlyph(slot, 0);
-        }
-        player->CastSpell(player, gp->SpellId, true);
-        player->SetGlyph(slot, glyphID);
-    }
-}
-
-void sTemplateNPC::RemoveAllGlyphs(Player* player)
-{
-    for (uint8 i = 0; i < MAX_GLYPH_SLOT_INDEX; ++i)
-    {
-        if (uint32 glyph = player->GetGlyph(i))
-        {
-            if (GlyphPropertiesEntry const* gp = sGlyphPropertiesStore.LookupEntry(glyph))
-            {
-                if (GlyphSlotEntry const* gs = sGlyphSlotStore.LookupEntry(player->GetGlyphSlot(i)))
-                {
-                    player->RemoveAurasDueToSpell(sGlyphPropertiesStore.LookupEntry(glyph)->SpellId);
-                    player->SetGlyph(i, 0);
-                    player->SendTalentsInfoData(false); // this is somewhat an in-game glyph realtime update (apply/remove)
-                }
-            }
-        }
-    }
-}
-
-void sTemplateNPC::LearnTemplateTalents(Player* player)
-{
-    for (TalentContainer::const_iterator itr = m_TalentContainer.begin(); itr != m_TalentContainer.end(); ++itr)
-    {
-        if ((*itr)->playerClass == GetClassString(player).c_str() && (*itr)->playerSpec == sTalentsSpec)
-        {
-            player->LearnSpell((*itr)->talentId, false);
-            player->AddTalent((*itr)->talentId, player->GetActiveSpec(), true);
-        }
-    }
-    player->SetFreeTalentPoints(0);
-    player->SendTalentsInfoData(false);
-}
-
-void sTemplateNPC::LearnTemplateGlyphs(Player* player)
-{
-    for (GlyphContainer::const_iterator itr = m_GlyphContainer.begin(); itr != m_GlyphContainer.end(); ++itr)
-    {
-        if ((*itr)->playerClass == GetClassString(player).c_str() && (*itr)->playerSpec == sTalentsSpec)
-            ApplyGlyph(player, (*itr)->slot, (*itr)->glyph);
-    }
-    player->SendTalentsInfoData(false);
-}
-
 void sTemplateNPC::EquipTemplateGear(Player* player)
 {
     if (player->GetRace() == RACE_HUMAN)
@@ -152,75 +95,6 @@ void sTemplateNPC::EquipTemplateGear(Player* player)
             }
         }
     }
-}
-
-void sTemplateNPC::LoadTalentsContainer()
-{
-    for (TalentContainer::const_iterator itr = m_TalentContainer.begin(); itr != m_TalentContainer.end(); ++itr)
-        delete *itr;
-
-    m_TalentContainer.clear();
-
-    uint32 oldMSTime = getMSTime();
-    uint32 count = 0;
-
-    QueryResult result = CharacterDatabase.Query("SELECT playerClass, playerSpec, talentId FROM template_npc_talents;");
-
-    if (!result)
-    {
-        TC_LOG_INFO("server.worldserver", ">>TEMPLATE NPC: Loaded 0 talent templates. DB table `template_npc_talents` is empty!");
-        return;
-    }
-
-    do
-    {
-        Field* fields = result->Fetch();
-
-        TalentTemplate* pTalent = new TalentTemplate;
-
-        pTalent->playerClass = fields[0].GetString();
-        pTalent->playerSpec = fields[1].GetString();
-        pTalent->talentId = fields[2].GetUInt32();
-
-        m_TalentContainer.push_back(pTalent);
-        ++count;
-    } while (result->NextRow());
-    TC_LOG_INFO("server.worldserver", ">>TEMPLATE NPC: Loaded %u talent templates in %u ms.", count, GetMSTimeDiffToNow(oldMSTime));
-}
-
-void sTemplateNPC::LoadGlyphsContainer()
-{
-    for (GlyphContainer::const_iterator itr = m_GlyphContainer.begin(); itr != m_GlyphContainer.end(); ++itr)
-        delete *itr;
-
-    m_GlyphContainer.clear();
-
-    QueryResult result = CharacterDatabase.Query("SELECT playerClass, playerSpec, slot, glyph FROM template_npc_glyphs;");
-
-    uint32 oldMSTime = getMSTime();
-    uint32 count = 0;
-
-    if (!result)
-    {
-        TC_LOG_INFO("server.worldserver", ">>TEMPLATE NPC: Loaded 0 glyph templates. DB table `template_npc_glyphs` is empty!");
-        return;
-    }
-
-    do
-    {
-        Field* fields = result->Fetch();
-
-        GlyphTemplate* pGlyph = new GlyphTemplate;
-
-        pGlyph->playerClass = fields[0].GetString();
-        pGlyph->playerSpec = fields[1].GetString();
-        pGlyph->slot = fields[2].GetUInt8();
-        pGlyph->glyph = fields[3].GetUInt32();
-
-        m_GlyphContainer.push_back(pGlyph);
-        ++count;
-    } while (result->NextRow());
-    TC_LOG_INFO("server.worldserver", ">>TEMPLATE NPC: Loaded %u glyph templates in %u ms.", count, GetMSTimeDiffToNow(oldMSTime));
 }
 
 void sTemplateNPC::LoadHumanGearContainer()
@@ -427,85 +301,6 @@ void sTemplateNPC::ExtractGearTemplateToDB(Player* player, std::string& playerSp
     }
 }
 
-void sTemplateNPC::ExtractTalentTemplateToDB(Player* player, std::string& playerSpecStr)
-{
-    QueryResult result = CharacterDatabase.PQuery("SELECT spell FROM character_talent WHERE guid = '%u' "
-        "AND talentGroup = '%u';", player->GetGUID(), player->GetActiveSpec());
-
-    if (!result)
-    {
-        return;
-    }
-    else if (player->GetFreeTalentPoints() > 0)
-    {
-        player->GetSession()->SendAreaTriggerMessage("You have unspend talent points. Please spend all your talent points and re-extract the template.");
-        return;
-    }
-    else
-    {
-        do
-        {
-            Field* fields = result->Fetch();
-            uint32 spell = fields[0].GetUInt32();
-
-            CharacterDatabase.PExecute("INSERT INTO template_npc_talents (playerClass, playerSpec, talentId) "
-                "VALUES ('%s', '%s', '%u');", GetClassString(player).c_str(), playerSpecStr.c_str(), spell);
-        } while (result->NextRow());
-    }
-}
-
-void sTemplateNPC::ExtractGlyphsTemplateToDB(Player* player, std::string& playerSpecStr)
-{
-    QueryResult result = CharacterDatabase.PQuery("SELECT glyph1, glyph2, glyph3, glyph4, glyph5, glyph6 "
-        "FROM character_glyphs WHERE guid = '%u' AND talentGroup = '%u';", player->GetGUID(), player->GetActiveSpec());
-
-    for (uint8 slot = 0; slot < MAX_GLYPH_SLOT_INDEX; ++slot)
-    {
-        if (!result)
-        {
-            player->GetSession()->SendAreaTriggerMessage("Get glyphs and re-extract the template!");
-            continue;
-        }
-
-        Field* fields = result->Fetch();
-        uint32 glyph1 = fields[0].GetUInt32();
-        uint32 glyph2 = fields[1].GetUInt32();
-        uint32 glyph3 = fields[2].GetUInt32();
-        uint32 glyph4 = fields[3].GetUInt32();
-        uint32 glyph5 = fields[4].GetUInt32();
-        uint32 glyph6 = fields[5].GetUInt32();
-
-        uint32 storedGlyph;
-
-        switch (slot)
-        {
-        case 0:
-            storedGlyph = glyph1;
-            break;
-        case 1:
-            storedGlyph = glyph2;
-            break;
-        case 2:
-            storedGlyph = glyph3;
-            break;
-        case 3:
-            storedGlyph = glyph4;
-            break;
-        case 4:
-            storedGlyph = glyph5;
-            break;
-        case 5:
-            storedGlyph = glyph6;
-            break;
-        default:
-            break;
-        }
-
-        CharacterDatabase.PExecute("INSERT INTO template_npc_glyphs (playerClass, playerSpec, slot, glyph) "
-            "VALUES ('%s', '%s', '%u', '%u');", GetClassString(player).c_str(), playerSpecStr.c_str(), slot, storedGlyph);
-    }
-}
-
 bool sTemplateNPC::CanEquipTemplate(Player* player, std::string& playerSpecStr)
 {
     if (player->GetRace() == RACE_HUMAN)
@@ -549,62 +344,62 @@ public:
             switch (player->GetClass())
             {
             case CLASS_PRIEST:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_wordfortitude:30|t|r Use Discipline Spec", GOSSIP_SENDER_MAIN, 0);
-                /*AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_wordfortitude:30|t|r Use Discipline Spec (Talents Only)", GOSSIP_SENDER_MAIN, 100);*/
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_holybolt:30|t|r Use Holy Spec", GOSSIP_SENDER_MAIN, 1);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_shadow_shadowwordpain:30|t|r Use Shadow Spec", GOSSIP_SENDER_MAIN, 2);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_wordfortitude:30|t|r Use Discipline Gear", GOSSIP_SENDER_MAIN, 0);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_holybolt:30|t|r Use Holy Gear", GOSSIP_SENDER_MAIN, 1);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_shadow_shadowwordpain:30|t|r Use Shadow Gear", GOSSIP_SENDER_MAIN, 2);
                 break;
             case CLASS_PALADIN:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_holybolt:30|t|r Use Holy Spec", GOSSIP_SENDER_MAIN, 3);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_devotionaura:30|t|r Use Protection Spec", GOSSIP_SENDER_MAIN, 4);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_auraoflight:30|t|r Use Retribution Spec", GOSSIP_SENDER_MAIN, 5);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_holybolt:30|t|r Use Holy Gear", GOSSIP_SENDER_MAIN, 3);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_devotionaura:30|t|r Use Protection Gear", GOSSIP_SENDER_MAIN, 4);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_auraoflight:30|t|r Use Retribution Gear", GOSSIP_SENDER_MAIN, 5);
                 break;
             case CLASS_WARRIOR:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_warrior_innerrage:30|t|r Use Fury Spec", GOSSIP_SENDER_MAIN, 6);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_rogue_eviscerate:30|t|r Use Arms Spec", GOSSIP_SENDER_MAIN, 7);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_warrior_defensivestance:30|t|r Use Protection Spec", GOSSIP_SENDER_MAIN, 8);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_warrior_innerrage:30|t|r Use Fury Gear", GOSSIP_SENDER_MAIN, 6);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_rogue_eviscerate:30|t|r Use Arms Gear", GOSSIP_SENDER_MAIN, 7);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_warrior_defensivestance:30|t|r Use Protection Gear", GOSSIP_SENDER_MAIN, 8);
                 break;
             case CLASS_MAGE:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_magicalsentry:30|t|r Use Arcane Spec", GOSSIP_SENDER_MAIN, 9);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_fire_flamebolt:30|t|r Use Fire Spec", GOSSIP_SENDER_MAIN, 10);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_frost_frostbolt02:30|t|r Use Frost Spec", GOSSIP_SENDER_MAIN, 11);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_holy_magicalsentry:30|t|r Use Arcane Gear", GOSSIP_SENDER_MAIN, 9);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_fire_flamebolt:30|t|r Use Fire Gear", GOSSIP_SENDER_MAIN, 10);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_frost_frostbolt02:30|t|r Use Frost Gear", GOSSIP_SENDER_MAIN, 11);
                 break;
             case CLASS_WARLOCK:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_shadow_deathcoil:30|t|r Use Affliction Spec", GOSSIP_SENDER_MAIN, 12);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_shadow_metamorphosis:30|t|r Use Demonology Spec", GOSSIP_SENDER_MAIN, 13);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_shadow_rainoffire:30|t|r Use Destruction Spec", GOSSIP_SENDER_MAIN, 14);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_shadow_deathcoil:30|t|r Use Affliction Gear", GOSSIP_SENDER_MAIN, 12);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_shadow_metamorphosis:30|t|r Use Demonology Gear", GOSSIP_SENDER_MAIN, 13);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_shadow_rainoffire:30|t|r Use Destruction Gear", GOSSIP_SENDER_MAIN, 14);
                 break;
             case CLASS_SHAMAN:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_lightning:30|t|r Use Elemental Spec", GOSSIP_SENDER_MAIN, 15);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_lightningshield:30|t|r Use Enhancement Spec", GOSSIP_SENDER_MAIN, 16);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_magicimmunity:30|t|r Use Restoration Spec", GOSSIP_SENDER_MAIN, 17);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_lightning:30|t|r Use Elemental Gear", GOSSIP_SENDER_MAIN, 15);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_lightningshield:30|t|r Use Enhancement Gear", GOSSIP_SENDER_MAIN, 16);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_magicimmunity:30|t|r Use Restoration Gear", GOSSIP_SENDER_MAIN, 17);
                 break;
             case CLASS_DRUID:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_starfall:30|t|r Use Ballance Spec", GOSSIP_SENDER_MAIN, 18);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_racial_bearform:30|t|r Use Feral Spec", GOSSIP_SENDER_MAIN, 19);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_healingtouch:30|t|r Use Restoration Spec", GOSSIP_SENDER_MAIN, 20);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_starfall:30|t|r Use Ballance Gear", GOSSIP_SENDER_MAIN, 18);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_racial_bearform:30|t|r Use Feral Gear", GOSSIP_SENDER_MAIN, 19);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_nature_healingtouch:30|t|r Use Restoration Gear", GOSSIP_SENDER_MAIN, 20);
                 break;
             case CLASS_HUNTER:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_marksmanship:30|t|r Use Markmanship Spec", GOSSIP_SENDER_MAIN, 21);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_hunter_beasttaming:30|t|r Use Beastmastery Spec", GOSSIP_SENDER_MAIN, 22);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_Hunter_swiftstrike:30|t|r Use Survival Spec", GOSSIP_SENDER_MAIN, 23);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_marksmanship:30|t|r Use Markmanship Gear", GOSSIP_SENDER_MAIN, 21);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_hunter_beasttaming:30|t|r Use Beastmastery Gear", GOSSIP_SENDER_MAIN, 22);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_Hunter_swiftstrike:30|t|r Use Survival Gear", GOSSIP_SENDER_MAIN, 23);
                 break;
             case CLASS_ROGUE:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_rogue_eviscerate:30|t|r Use Assasination Spec", GOSSIP_SENDER_MAIN, 24);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_backstab:30|t|r Use Combat Spec", GOSSIP_SENDER_MAIN, 25);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_stealth:30|t|r Use Subtlety Spec", GOSSIP_SENDER_MAIN, 26);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_rogue_eviscerate:30|t|r Use Assasination Gear", GOSSIP_SENDER_MAIN, 24);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_backstab:30|t|r Use Combat Gear", GOSSIP_SENDER_MAIN, 25);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\ability_stealth:30|t|r Use Subtlety Gear", GOSSIP_SENDER_MAIN, 26);
                 break;
             case CLASS_DEATH_KNIGHT:
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_deathknight_bloodpresence:30|t|r Use Blood Spec", GOSSIP_SENDER_MAIN, 27);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_deathknight_frostpresence:30|t|r Use Frost Spec", GOSSIP_SENDER_MAIN, 28);
-                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_deathknight_unholypresence:30|t|r Use Unholy Spec", GOSSIP_SENDER_MAIN, 29);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_deathknight_bloodpresence:30|t|r Use Blood Gear", GOSSIP_SENDER_MAIN, 27);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_deathknight_frostpresence:30|t|r Use Frost Gear", GOSSIP_SENDER_MAIN, 28);
+                AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\spell_deathknight_unholypresence:30|t|r Use Unholy Gear", GOSSIP_SENDER_MAIN, 29);
                 break;
             }
 
-            /*AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\Spell_ChargeNegative:30|t|r Remove all glyphs", GOSSIP_SENDER_MAIN, 30);
             AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\Spell_ChargeNegative:30|t|r Reset Talents", GOSSIP_SENDER_MAIN, 31);
-            AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\Spell_ChargeNegative:30|t|r Destroy my equipped gear", GOSSIP_SENDER_MAIN, 32);*/
+            AddGossipItemFor(player, GOSSIP_ICON_INTERACT_1, "|cff00ff00|TInterface\\icons\\Spell_ChargeNegative:30|t|r Destroy my equipped gear", GOSSIP_SENDER_MAIN, 32);
+
             SendGossipMenuFor(player, 55002, me->GetGUID());
+
             return true;
         }
 
@@ -630,16 +425,6 @@ public:
                 }
             }
 
-            // Don't let players to use Template feature after spending some talent points
-            if (player->GetFreeTalentPoints() < 71)
-            {
-                player->GetSession()->SendAreaTriggerMessage("You have already spent some talent points. You need to reset your talents first!");
-                CloseGossipMenuFor(player);
-                return;
-            }
-
-            sTemplateNpcMgr->LearnTemplateTalents(player);
-            sTemplateNpcMgr->LearnTemplateGlyphs(player);
             sTemplateNpcMgr->EquipTemplateGear(player);
             sTemplateNpcMgr->LearnPlateMailSpells(player);
 
@@ -669,49 +454,6 @@ public:
             player->LearnSpell(Cold_Weather_Flying, false);
             player->LearnSpell(Amani_War_Bear, false);
 
-        }
-
-        static void LearnOnlyTalentsAndGlyphs(Player* player, std::string& playerSpecStr) // Merge
-        {
-            if (sTemplateNpcMgr->CanEquipTemplate(player, playerSpecStr) == false)
-            {
-                player->GetSession()->SendAreaTriggerMessage("There's no templates for %s specialization yet.", playerSpecStr.c_str());
-                return;
-            }
-
-            // Don't let players to use Template feature after spending some talent points
-            if (player->GetFreeTalentPoints() < 71)
-            {
-                player->GetSession()->SendAreaTriggerMessage("You have already spent some talent points. You need to reset your talents first!");
-                CloseGossipMenuFor(player);
-                return;
-            }
-
-            sTemplateNpcMgr->LearnTemplateTalents(player);
-            sTemplateNpcMgr->LearnTemplateGlyphs(player);
-            //sTemplateNpcMgr->EquipTemplateGear(player);
-            sTemplateNpcMgr->LearnPlateMailSpells(player);
-
-            LearnWeaponSkills(player);
-
-            player->GetSession()->SendAreaTriggerMessage("Successfuly learned talent spec %s!", playerSpecStr.c_str());
-
-            // Learn Riding/Flying
-            if (player->HasSpell(Artisan_Riding) ||
-                player->HasSpell(Cold_Weather_Flying) ||
-                player->HasSpell(Amani_War_Bear) ||
-                player->HasSpell(Teach_Learn_Talent_Specialization_Switches) ||
-                player->HasSpell(Learn_a_Second_Talent_Specialization))
-                return;
-
-            // Cast spells that teach dual spec
-            // Both are also ImplicitTarget self and must be cast by player
-            player->CastSpell(player, Teach_Learn_Talent_Specialization_Switches, player->GetGUID());
-            player->CastSpell(player, Learn_a_Second_Talent_Specialization, player->GetGUID());
-
-            player->LearnSpell(Artisan_Riding, false);
-            player->LearnSpell(Cold_Weather_Flying, false);
-            player->LearnSpell(Amani_War_Bear, false);
         }
 
         bool GossipSelect(Player* player, uint32 /*uiSender*/, uint32 uiAction) override
@@ -905,21 +647,12 @@ public:
                 EquipFullTemplateGear(player, sTemplateNpcMgr->sTalentsSpec);
                 CloseGossipMenuFor(player);
                 break;
-
-            case 30:
-                sTemplateNpcMgr->RemoveAllGlyphs(player);
-                player->GetSession()->SendAreaTriggerMessage("Your glyphs have been removed.");
-                //GossipHello(player);
-                CloseGossipMenuFor(player);
-                break;
-
             case 31:
                 player->ResetTalents(true);
                 player->SendTalentsInfoData(false);
                 player->GetSession()->SendAreaTriggerMessage("Your talents have been reset.");
                 CloseGossipMenuFor(player);
                 break;
-
             case 32:
                 for (uint8 i = EQUIPMENT_SLOT_START; i < EQUIPMENT_SLOT_END; ++i)
                 {
@@ -944,13 +677,6 @@ public:
                 player->GetSession()->SendAreaTriggerMessage("Your equipped gear has been destroyed.");
                 CloseGossipMenuFor(player);
                 break;
-
-            case 100: // Use Discipline Priest Spec
-                sTemplateNpcMgr->sTalentsSpec = "Discipline";
-                LearnOnlyTalentsAndGlyphs(player, sTemplateNpcMgr->sTalentsSpec);
-                CloseGossipMenuFor(player);
-                break;
-
             default: // Just in case
                 player->GetSession()->SendAreaTriggerMessage("Something went wrong in the code. Please contact the administrator.");
                 break;
@@ -977,11 +703,9 @@ public:
         // Load templates for Template NPC #1
         TC_LOG_INFO("server.loading", "== TEMPLATE NPC ===========================================================================");
         TC_LOG_INFO("server.loading", "Loading Template Talents...");
-        sTemplateNpcMgr->LoadTalentsContainer();
 
         // Load templates for Template NPC #2
         TC_LOG_INFO("server.loading", "Loading Template Glyphs...");
-        sTemplateNpcMgr->LoadGlyphsContainer();
 
         // Load templates for Template NPC #3
         TC_LOG_INFO("server.loading", "Loading Template Gear for Humans...");
@@ -1005,7 +729,7 @@ public:
 
     std::vector<ChatCommand> GetCommands() const override
     {
-        static std::vector<ChatCommand> TemplateNPCTable =
+         static std::vector<ChatCommand> TemplateNPCTable =
         {
             { "reload",      SEC_ADMINISTRATOR, true , &HandleReloadTemplateNPCCommand, "" }
         };
@@ -1021,8 +745,6 @@ public:
     static bool HandleReloadTemplateNPCCommand(ChatHandler* handler, const char* /*args*/)
     {
         TC_LOG_INFO("server.loading", "misc", "Reloading templates for Template NPC table...");
-        sTemplateNpcMgr->LoadTalentsContainer();
-        sTemplateNpcMgr->LoadGlyphsContainer();
         sTemplateNpcMgr->LoadHumanGearContainer();
         sTemplateNpcMgr->LoadAllianceGearContainer();
         sTemplateNpcMgr->LoadHordeGearContainer();

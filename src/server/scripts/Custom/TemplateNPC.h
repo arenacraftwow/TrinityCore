@@ -233,34 +233,24 @@ public:
         static sTemplateNPC* instance = new sTemplateNPC();
         return instance;
     }
-    void LoadTalentsContainer();
-    void LoadGlyphsContainer();
+
+    std::string sTalentsSpec;
 
     void LoadHumanGearContainer();
     void LoadAllianceGearContainer();
     void LoadHordeGearContainer();
 
-    void ApplyGlyph(Player* player, uint8 slot, uint32 glyphID);
-    void RemoveAllGlyphs(Player* player);
     void ApplyBonus(Player* player, Item* item, EnchantmentSlot slot, uint32 bonusEntry);
 
     bool OverwriteTemplate(Player* /*player*/, std::string& /*playerSpecStr*/);
     void ExtractGearTemplateToDB(Player* /*player*/, std::string& /*playerSpecStr*/);
-    void ExtractTalentTemplateToDB(Player* /*player*/, std::string& /*playerSpecStr*/);
-    void ExtractGlyphsTemplateToDB(Player* /*player*/, std::string& /*playerSpecStr*/);
     bool CanEquipTemplate(Player* /*player*/, std::string& /*playerSpecStr*/);
 
     std::string GetClassString(Player* /*player*/);
-    std::string sTalentsSpec;
 
-    void LearnTemplateTalents(Player* /*player*/);
-    void LearnTemplateGlyphs(Player* /*player*/);
     void EquipTemplateGear(Player* /*player*/);
 
     void LearnPlateMailSpells(Player* /*player*/);
-
-    GlyphContainer m_GlyphContainer;
-    TalentContainer m_TalentContainer;
 
     HumanGearContainer m_HumanGearContainer;
     AllianceGearContainer m_AllianceGearContainer;
