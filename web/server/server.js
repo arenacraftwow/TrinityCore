@@ -13,6 +13,8 @@ const STATIC_FILES_PATH = path.join(__dirname, 'build');
 async function main() {
     const server = new Koa();
 
+    server.use(getLoggerMiddleware());
+
     const websiteApp = getWebsiteApp();
     const apiApp = await getApiApp();
 
@@ -48,6 +50,18 @@ main()
         console.error('application terminated due to an unexpected exception.');
         console.error(ex);
     });
+
+function getLoggerMiddleware() {
+    const uniqueIps = new Set();
+
+    return async function(ctx, next) {
+        // logger middleware
+        const start = new Date();
+        await next();
+        const end = new Date();
+        console.log(`[${ctx.request.ip}]: ${ctx.request.method} ${ctx.request.url} took ${(end - start)}ms`);
+    };
+}
 
 async function getApiApp() {
     const app = new Koa();
