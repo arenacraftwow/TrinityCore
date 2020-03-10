@@ -2,33 +2,45 @@ const Koa = require('koa');
 const { users } = require('./routes/users');
 const bodyParser = require('koa-bodyparser');
 const mysql = require('mysql2/promise');
-
+const mount = require('koa-mount');
+const serve = require('koa-static');
+const fs = require('fs');
+const path = require('path');
+const sendFile = require('koa-send');
 
 const PORT = process.env.PORT || 3000;
-
+const STATIC_FILES_PATH = path.join(__dirname, 'build')
 
 async function main() {
-    const app = new Koa();
+    const server = new Koa();
 
-    const authDbConn = await mysql.createConnection({
-        host: 'localhost',
-        user: 'trinity',
-        password: 'trinity',
-        database: 'auth'
-    });
+    const websiteApp = getWebsiteApp();
+    const apiApp = await getApiApp();
 
-    app.use(async function(ctx, next) {
-        ctx.db = { auth: authDbConn };
+    const routes = {
+        // add your top level routes here.
+        '/api': apiApp,
+        '/': websiteApp
+    }
+
+    const rootLevelRoutes = new Set();
+    for (const [route, app] of Object.entries(routes)) {
+        server.use(mount(route, app));
+        rootLevelRoutes.add(route);
+    }
+
+    // add support for client side routing
+    server.use(async function(ctx, next) {
+        const reqPath = path.parse(ctx.request.url);
+        if (ctx.accepts('html') && !rootLevelRoutes.has(reqPath)) {
+            await sendFile(ctx, 'index.html', { root: STATIC_FILES_PATH })
+        }
         await next();
     });
 
-    app.use(bodyParser());
-
-    app.use(users.routes());
-
-    app.listen(PORT, () => {
+    server.listen(PORT, () => {
         console.log(`Server up and running on port: ${PORT}`)
-    });
+    });;
 
 }
 
@@ -36,4 +48,27 @@ main()
     .catch(ex => {
         console.error('application terminated due to an unexpected exception.');
         console.error(ex);
-    })
+    });
+
+async function getApiApp() {
+    const app = new Koa();
+    const authDbConn = await mysql.createConnection({
+        host: 'localhost',
+        user: 'trinity',
+        password: 'trinity',
+        database: 'auth'
+    });
+    app.use(async function(ctx, next) {
+        ctx.db = { auth: authDbConn };
+        await next();
+    });
+    app.use(bodyParser());
+    app.use(users.routes());
+    return app;
+}
+
+function getWebsiteApp() {
+    const app = new Koa();
+    app.use(serve(STATIC_FILES_PATH));
+    return app;
+}

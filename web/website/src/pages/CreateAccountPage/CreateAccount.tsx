@@ -3,7 +3,7 @@ import { TextField } from 'components/Form/TextField';
 import { Header } from 'components/Typography/Header';
 import { Button } from 'components/Form/Button';
 import ReCAPTCHA from 'react-google-recaptcha';
-import { userService } from 'service/userService.mock';
+import { userService } from 'service/userService';
 import { Labeled } from 'components/Form/Labeled';
 import { notNull } from 'util/notNull';
 import { toast } from 'react-toastify';

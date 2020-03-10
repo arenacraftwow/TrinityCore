@@ -2,7 +2,8 @@ const KoaRouter = require('koa-router');
 const Schema = require('validate');
 const crypto = require('crypto');
 const axios = require('axios').default;
-const { RECAPTCHA_SECRET } = require('../config')
+const { RECAPTCHA_SECRET } = require('../config');
+const qs = require('querystring');
 
 const users = new KoaRouter({
     prefix: '/users'
@@ -34,10 +35,17 @@ users.post('/', async ctx => {
     const username = ctx.request.body.username.toUpperCase();
     const password = ctx.request.body.password.toUpperCase();
 
-    const resp = await axios.post('https://www.google.com/recaptcha/api/siteverify', {
+    const catpchaReqBody = {
         secret: RECAPTCHA_SECRET,
         response: ctx.request.body.reCaptchaKey
-    });
+    }
+    const catpchaReqBodyCfg = {
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    }
+
+    const resp = await axios.post('https://www.google.com/recaptcha/api/siteverify', qs.stringify(catpchaReqBody), catpchaReqBodyCfg);
 
     if (!resp.data.success) {
         ctx.response.body = { type: 'InvalidCaptchaCode' }
