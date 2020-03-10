@@ -657,7 +657,7 @@ public:
                 break;
             }
             player->UpdateSkillsForLevel();
-
+            player->SaveToDB();
             return true;
         }
     };

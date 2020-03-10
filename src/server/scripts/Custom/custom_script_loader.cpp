@@ -19,6 +19,7 @@
 
 void AddSC_TemplateNPC();
 void AddHighestTalentRankScript();
+void AddSC_DuelReset();
 
 // The name of this function should match:
 // void Add${NameOfDirectory}Scripts()
@@ -26,4 +27,5 @@ void AddCustomScripts()
 {
     AddSC_TemplateNPC();
     AddHighestTalentRankScript();
+    AddSC_DuelReset();
 }
