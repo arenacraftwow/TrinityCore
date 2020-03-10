@@ -47,12 +47,12 @@ export function CreateAccountPage() {
 
         let hasErr = false;
         if (!/^[a-zA-Z0-9_-]{4,16}$/.test(username)) {
-            setUserNameErr('Username must be between 4, 16 characters long and contain only letters and spaces.');
+            setUserNameErr('Username must be between 4, 16 characters long and contain only letters and numbers, no spaces.');
             hasErr = true;
         }
 
-        if (password.length <= 6 || password.length > 33) {
-            setPasswordErr('Invalid password length. Must be between 6, and 32 characters long');
+        if (password.length <= 6 || password.length > 16) {
+            setPasswordErr('Invalid password length. Must be between 6, and 16 characters long');
             hasErr = true;
         }
 

@@ -3,13 +3,12 @@ const { users } = require('./routes/users');
 const bodyParser = require('koa-bodyparser');
 const mysql = require('mysql2/promise');
 const mount = require('koa-mount');
-const serve = require('koa-static');
-const fs = require('fs');
 const path = require('path');
+const serve = require('koa-static');
 const sendFile = require('koa-send');
 
 const PORT = process.env.PORT || 3000;
-const STATIC_FILES_PATH = path.join(__dirname, 'build')
+const STATIC_FILES_PATH = path.join(__dirname, 'build');
 
 async function main() {
     const server = new Koa();

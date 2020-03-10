@@ -13,7 +13,8 @@ const createUserRequest = new Schema({
     username: {
         type: String,
         required: true,
-        length: { min: 4, max: 16 }
+        length: { min: 4, max: 16 },
+        match: /^[a-zA-Z0-9_-]{4,16}$/
     },
     password: {
         type: String,
@@ -34,7 +35,7 @@ users.post('/', async ctx => {
 
     const username = ctx.request.body.username.toUpperCase();
     const password = ctx.request.body.password.toUpperCase();
-
+    console.log(RECAPTCHA_SECRET)
     const catpchaReqBody = {
         secret: RECAPTCHA_SECRET,
         response: ctx.request.body.reCaptchaKey
