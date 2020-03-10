@@ -114,6 +114,8 @@
 #define SKILL_PERM_BONUS(x)    int16(PAIR32_HIPART(x))
 #define MAKE_SKILL_BONUS(t, p) MAKE_PAIR32(t, p)
 
+#define START_NAKED true
+
 enum CharacterFlags
 {
     CHARACTER_FLAG_NONE                 = 0x00000000,
@@ -599,39 +601,41 @@ bool Player::Create(ObjectGuid::LowType guidlow, CharacterCreateInfo* createInfo
         addActionButton(action_itr->button, action_itr->action, action_itr->type);
 
     // original items
-    if (CharStartOutfitEntry const* oEntry = GetCharStartOutfitEntry(createInfo->Race, createInfo->Class, createInfo->Gender))
-    {
-        for (int j = 0; j < MAX_OUTFIT_ITEMS; ++j)
+    if (!START_NAKED) {
+        if (CharStartOutfitEntry const* oEntry = GetCharStartOutfitEntry(createInfo->Race, createInfo->Class, createInfo->Gender))
         {
-            if (oEntry->ItemId[j] <= 0)
-                continue;
-
-            uint32 itemId = oEntry->ItemId[j];
-
-            // just skip, reported in ObjectMgr::LoadItemTemplates
-            ItemTemplate const* iProto = sObjectMgr->GetItemTemplate(itemId);
-            if (!iProto)
-                continue;
-
-            // BuyCount by default
-            uint32 count = iProto->BuyCount;
-
-            // special amount for food/drink
-            if (iProto->Class == ITEM_CLASS_CONSUMABLE && iProto->SubClass == ITEM_SUBCLASS_FOOD)
+            for (int j = 0; j < MAX_OUTFIT_ITEMS; ++j)
             {
-                switch (iProto->Spells[0].SpellCategory)
+                if (oEntry->ItemId[j] <= 0)
+                    continue;
+
+                uint32 itemId = oEntry->ItemId[j];
+
+                // just skip, reported in ObjectMgr::LoadItemTemplates
+                ItemTemplate const* iProto = sObjectMgr->GetItemTemplate(itemId);
+                if (!iProto)
+                    continue;
+
+                // BuyCount by default
+                uint32 count = iProto->BuyCount;
+
+                // special amount for food/drink
+                if (iProto->Class == ITEM_CLASS_CONSUMABLE && iProto->SubClass == ITEM_SUBCLASS_FOOD)
                 {
-                    case SPELL_CATEGORY_FOOD:                                // food
-                        count = GetClass() == CLASS_DEATH_KNIGHT ? 10 : 4;
-                        break;
-                    case SPELL_CATEGORY_DRINK:                                // drink
-                        count = 2;
-                        break;
+                    switch (iProto->Spells[0].SpellCategory)
+                    {
+                        case SPELL_CATEGORY_FOOD:                                // food
+                            count = GetClass() == CLASS_DEATH_KNIGHT ? 10 : 4;
+                            break;
+                        case SPELL_CATEGORY_DRINK:                                // drink
+                            count = 2;
+                            break;
+                    }
+                    if (iProto->GetMaxStackSize() < count)
+                        count = iProto->GetMaxStackSize();
                 }
-                if (iProto->GetMaxStackSize() < count)
-                    count = iProto->GetMaxStackSize();
+                StoreNewItemInBestSlots(itemId, count);
             }
-            StoreNewItemInBestSlots(itemId, count);
         }
     }
 
