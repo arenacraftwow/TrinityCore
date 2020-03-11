@@ -273,8 +273,15 @@ public:
     void OnLogin(Player* p, bool firstLogin) override 
     {
         if (firstLogin) {
+             // heartstone
+            WorldLocation loc(4116.0, 3065.0, 339.50, 4.9);
+            p->SetHomebind(loc, 3738);
+            p->AddItem(6948,1);
+
+            // riding skills
             p->LearnSpell(34091, false);
             p->LearnSpell(54197, false);
+
             LearnWeaponSkills(p);
             LearnPlateMailSpells(p);
         }
