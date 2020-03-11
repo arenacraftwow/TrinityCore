@@ -14,23 +14,6 @@
 #include "ObjectMgr.h"
 #include "Chat.h"
 
-void sTemplateNPC::LearnPlateMailSpells(Player* player)
-{
-    switch (player->GetClass())
-    {
-    case CLASS_WARRIOR:
-    case CLASS_PALADIN:
-    case CLASS_DEATH_KNIGHT:
-        player->LearnSpell(PLATE_MAIL, true);
-        break;
-    case CLASS_SHAMAN:
-    case CLASS_HUNTER:
-        player->LearnSpell(MAIL, true);
-        break;
-    default:
-        break;
-    }
-}
 
 void sTemplateNPC::ApplyBonus(Player* player, Item* item, EnchantmentSlot slot, uint32 bonusEntry)
 {
@@ -425,9 +408,6 @@ public:
             }
 
             sTemplateNpcMgr->EquipTemplateGear(player);
-            sTemplateNpcMgr->LearnPlateMailSpells(player);
-
-            LearnWeaponSkills(player);
 
             player->GetSession()->SendAreaTriggerMessage("Successfuly equipped %s %s template!", playerSpecStr.c_str(), sTemplateNpcMgr->GetClassString(player).c_str());
 
