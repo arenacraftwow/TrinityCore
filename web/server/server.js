@@ -12,11 +12,17 @@ const STATIC_FILES_PATH = path.join(__dirname, 'build');
 
 async function main() {
     const server = new Koa();
+    const authDbConn = await mysql.createConnection({
+        host: 'localhost',
+        user: 'trinity',
+        password: 'trinity',
+        database: 'auth'
+    });
 
     server.use(getLoggerMiddleware());
 
     const websiteApp = getWebsiteApp();
-    const apiApp = await getApiApp();
+    const apiApp = await getApiApp(authDbConn);
 
     const routes = {
         // add your top level routes here.
@@ -43,6 +49,15 @@ async function main() {
         console.log(`Server up and running on port: ${PORT}`)
     });;
 
+
+    setInterval(() => {
+        // ping mysql to alive
+        authDbConn.query(`SELECT NOW();`)
+            .then(() => {
+                console.log(new Date() + ' pinged mysql to keep conn alive');
+            });
+    }, 1000 * 60 * 60);
+
 }
 
 main()
@@ -63,14 +78,9 @@ function getLoggerMiddleware() {
     };
 }
 
-async function getApiApp() {
+async function getApiApp(authDbConn) {
     const app = new Koa();
-    const authDbConn = await mysql.createConnection({
-        host: 'localhost',
-        user: 'trinity',
-        password: 'trinity',
-        database: 'auth'
-    });
+
     app.use(async function(ctx, next) {
         ctx.db = { auth: authDbConn };
         await next();
